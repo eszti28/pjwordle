@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="icon" href="potat.png" />
+    <nav>
+      <h2>PJ Wordle</h2>
+    </nav>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <!-- <script src="script.js"></script> -->
+    <title>Wordle</title>
+  </head>
+  <body>
+    <div data-guess-grid class="guess-grid">
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+    </div>
+    <div data-keyboard class="keyboard">
+      <button class="key" data-key="Q">Q</button>
+      <button class="key" data-key="W">W</button>
+      <button class="key" data-key="E">E</button>
+      <button class="key" data-key="R">R</button>
+      <button class="key" data-key="T">T</button>
+      <button class="key" data-key="Y">Y</button>
+      <button class="key" data-key="U">U</button>
+      <button class="key" data-key="I">I</button>
+      <button class="key" data-key="O">O</button>
+      <button class="key" data-key="P">P</button>
+      <div class="space"></div>
+      <button class="key" data-key="A">A</button>
+      <button class="key" data-key="S">S</button>
+      <button class="key" data-key="D">D</button>
+      <button class="key" data-key="F">F</button>
+      <button class="key" data-key="G">G</button>
+      <button class="key" data-key="H">H</button>
+      <button class="key" data-key="J">J</button>
+      <button class="key" data-key="K">K</button>
+      <button class="key" data-key="L">L</button>
+      <div class="space"></div>
+      <button data enter class="key large">Enter</button>
+      <button class="key" data-key="Z">Z</button>
+      <button class="key" data-key="X">X</button>
+      <button class="key" data-key="C">C</button>
+      <button class="key" data-key="V">V</button>
+      <button class="key" data-key="B">B</button>
+      <button class="key" data-key="N">N</button>
+      <button class="key" data-key="M">M</button>
+      <button data delete class="key large">Delete</button>
+    </div>
+    <script>
+      const targetWords = [
+        "bobby",
+        "tammy",
+        "clown",
+        "wario",
+        "slurp",
+        "ghost",
+        "potat",
+        "yoshi",
+        "curls",
+        "booby",
+        "sonic",
+        "mario",
+        "belly",
+        "jonas",
+        "artsy",
+        "space",
+        "stars",
+        "peach",
+        "cards",
+        "marbs",
+        "games",
+        "video",
+        "bucks",
+        "pizza",
+        "kirby",
+      ];
+      const keyboard = document.querySelector("[data-keyboard]");
+      const guessGrid = document.querySelector("[data-guess-grid]");
+      const FLIP_ANIMATION_DURATION = 500;
+      const DANCE_ANIMATION_DURATION = 500;
+      const wordLength = 5;
+      const random = Math.floor(Math.random() * targetWords.length - 1);
+      const targetWord = targetWords[random];
+
+      startInteraction();
+
+      function startInteraction() {
+        document.addEventListener("click", handleMouseClick);
+        document.addEventListener("keydown", handleKeyPress);
+      }
+
+      function stopInteraction() {
+        document.removeEventListener("click", handleMouseClick);
+        document.removeEventListener("keydown", handleKeyPress);
+      }
+
+      function handleMouseClick(e) {
+        if (e.target.matches("[data-key]")) {
+          pressKey(e.target.dataset.key);
+          return;
+        }
+        if (e.target.matches("[data-enter]")) {
+          submitGuess();
+          return;
+        }
+
+        if (e.target.matches("[data-delete]")) {
+          deleteKey();
+          return;
+        }
+      }
+
+      function handleKeyPress(e) {
+        if (e.key === "Enter") {
+          submitGuess();
+          return;
+        }
+
+        if (e.key === "Backspace" || e.key === "Delete") {
+          deleteKey();
+          return;
+        }
+
+        if (e.key.match(/[qwertzuioplkjhgfdsayxcvbnm]/)) {
+          pressKey(e.key);
+          return;
+        }
+      }
+
+      function pressKey(key) {
+        const activeTiles = getActiveTiles();
+        if (activeTiles.length >= wordLength) return;
+        const nextTile = guessGrid.querySelector(":not([data-letter])");
+        nextTile.dataset.letter = key.toLowerCase();
+        nextTile.textContent = key;
+        nextTile.dataset.state = "active";
+      }
+      function deleteKey() {
+        const activeTiles = getActiveTiles();
+        const lastTile = activeTiles[activeTiles.length - 1];
+        if (lastTile == null) return;
+        lastTile.textContent = "";
+        delete lastTile.dataset.state;
+        delete lastTile.dataset.letter;
+      }
+
+      function submitGuess() {
+        const activeTiles = [...getActiveTiles()];
+        if (activeTiles.length !== wordLength) {
+          alert("Not enough letters");
+          shakeTiles(activeTiles);
+          return;
+        }
+        const guess = activeTiles.reduce((word, tile) => {
+          return word + tile.dataset.letter;
+        }, "");
+
+        stopInteraction();
+        activeTiles.forEach((...params) => flipTile(...params, guess));
+      }
+
+      function flipTile(tile, index, array, guess) {
+        const letter = tile.dataset.letter;
+        const key = keyboard.querySelector(`[data-key="${letter}"i]`);
+        setTimeout(() => {
+          tile.classList.add("flip");
+        }, (index * FLIP_ANIMATION_DURATION) / 2);
+        tile.addEventListener(
+          "transitionend",
+          () => {
+            tile.classList.remove("flip");
+            if (targetWord[index] === letter) {
+              tile.dataset.state = "correct";
+              key.classList.add("correct");
+            } else if (targetWord.includes(letter)) {
+              tile.dataset.state = "wrong-location";
+              key.classList.add("wrong-location");
+            } else {
+              tile.dataset.state = "wrong";
+              key.classList.add("wrong");
+            }
+
+            if (index === array.length - 1) {
+              tile.addEventListener(
+                "transitionend",
+                () => {
+                  startInteraction();
+                  checkWinLose(guess, array);
+                }
+                // { once: true }
+              );
+            }
+          }
+          // { once: true }
+        );
+      }
+
+      function getActiveTiles() {
+        return guessGrid.querySelectorAll('[data-state="active"]');
+      }
+
+      function shakeTiles(tiles) {
+        tiles.forEach((tile) => {
+          tile.classList.add("shake");
+          tile.addEventListener(
+            "animationend",
+            () => {
+              tile.classList.remove("shake");
+            }
+            // { once: true }
+          );
+        });
+      }
+
+      function checkWinLose(guess, tiles) {
+        if (guess === targetWord) {
+          //alert("You win");
+          danceTiles(tiles);
+          stopInteraction();
+          return;
+        }
+
+        const remainingTiles = guessGrid.querySelectorAll(
+          ":not([data-letter])"
+        );
+        if (remainingTiles.length === 0) {
+          alert(targetWord.toUpperCase(), null);
+          stopInteraction();
+        }
+      }
+
+      function danceTiles(tiles) {
+        tiles.forEach((tile, index) => {
+          setTimeout(() => {
+            tile.classList.add("dance");
+            tile.addEventListener(
+              "animationend",
+              () => {
+                tile.classList.remove("dance");
+              },
+              { once: true }
+            );
+          }, (index * DANCE_ANIMATION_DURATION) / 5);
+        });
+      }
+    </script>
+  </body>
+</html>
