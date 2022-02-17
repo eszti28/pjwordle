@@ -63,12 +63,12 @@ function handleMouseClick(e) {
 
 function handleKeyPress(e) {
   if (e.key === "Enter") {
-    submitGuess();
+    submitGuess(e.key);
     return;
   }
 
   if (e.key === "Backspace" || e.key === "Delete") {
-    deleteKey();
+    deleteKey(e.key);
     return;
   }
 
